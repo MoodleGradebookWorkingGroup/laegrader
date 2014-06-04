@@ -35,6 +35,7 @@ $string['configaccuratetotals'] = 'Categories and course POINT TOTALS computed a
 $string['coursetotal'] = 'COURSE TOTAL<br />';
 $string['categorytotal'] = 'CATEGORY TOTAL<br />';
 $string['copytoexcel'] = 'Download contents of gradebook to csv suitable for Excel or Google';
+$string['editweight'] = 'Override the natural weight';
 $string['grader:manage'] = 'Manage the grader report';
 $string['laegrader_columnwidth'] = 'Number of characters wide before grade titles wrap';
 $string['laegrader_extrafields'] = 'Show extra user fields';

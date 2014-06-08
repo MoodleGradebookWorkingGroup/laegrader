@@ -673,6 +673,8 @@ class grade_tree_local extends grade_tree {
             $contribution = 0; // what's already been marked, if from cats and items - everything
             $missing_weight = 0; // what's not been marked, meaningless from cats and items
             $override_weight = 0; //
+            $checkids = array();
+            $extracredit = 0;
             if (!isset($this->items[$elementid]->max_earnable)) {
                 $this->items[$elementid]->max_earnable = 0;
             }
@@ -695,21 +697,29 @@ class grade_tree_local extends grade_tree {
                 $exitval = false;
                 if ($child['type'] === 'category' && ($fullweight || $this->showtotalsifcontainhidden !== GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN)) {
                     foreach ($child['children'] as $key => $grandchild) {
-                        if ($grandchild['type'] !== 'categoryitem' && !$grandchild['object']->is_hidden() && $grades[$grandchild['object']->id]->finalgrade != 0 &&(!isset($grades[$grandchild['object']->id]->weight) || $grades[$grandchild['object']->id]->weight != -1)) {
+                        if ($grandchild['type'] !== 'categoryitem'
+                        		&& !$grandchild['object']->is_hidden()
+                        		&& $grades[$grandchild['object']->id]->finalgrade != 0
+                        		&&(!isset($grades[$grandchild['object']->id]->weight)
+                        				|| $grades[$grandchild['object']->id]->weight != -1)) {
                             $exitval = true;
                             break;
                         }
                     }
                     if (!$exitval) {
                         $this->emptycats[$id] = 'empty';
-                        continue; // if all are hidden then don't count this into calculations
                     }
                 }
 
                 // check to see if weights are overridden
                 if (array_key_exists($id, $checkitems)) {
-            		$override_weight += $checkitems[$id]->weight;
-                	$grades[$id]->weight = $checkitems[$id]->weight;
+            		if (array_key_exists($id, $this->emptycats) && !$fullweight) {
+            			$grades[$id]->weight = 0;
+            		} else {
+	                	$override_weight += $checkitems[$id]->weight;
+	                	$grades[$id]->weight = $checkitems[$id]->weight;
+	                	$checkids[] = $id;
+            		}
             	}
             }
 
@@ -751,15 +761,13 @@ class grade_tree_local extends grade_tree {
                 } else if (isset($grades[$id]->weight) && $grades[$id]->weight == -1) { // has been dropped or not kept
                     continue;
                 } else if (array_key_exists($id, $checkitems)) {
-//                    $contribution += $grades[$id]->grade_item->grademax;
                 	continue; // already dealt with
                 } else if (array_key_exists($id, $this->emptycats)) {
                 	continue; // already dealt with
                 } else if ($this->items[$id]->extracredit == 1 && !$fullweight) { // extra credit is removed from the calculation making up the container's weight
-                    // do nothing, extra credit has weight over and above container weight
+                    $extracredit += $grades[$id]->grade_item->grademax;
                 } else if ($fullweight) { // meaning we're coming from cats and items
                     $contribution += $grades[$id]->grade_item->grademax;
-//                	$contribution += $this->items[$id]->grademax;
                 } else if (!isset($grades[$id]->finalgrade)) {
                     $missing_weight += $grades[$id]->grade_item->grademax;
                     $this->emptygrades[$id] = $this->items[$id];
@@ -771,10 +779,21 @@ class grade_tree_local extends grade_tree {
             // how much potential grades are left to be earned
             // normalizer adjust the weights to be equal to 100
             // weight adjuster is multiplied by the child's weight to achieve the right percentage of the container weight
-            if ($fullweight) {
+            if ($fullweight && $contribution > 0) {
                 $normalizer = (100 - $override_weight) / $contribution;
             } else if ($contribution == 0) {
-                $normalizer = 1;
+            	if (sizeof($checkids) > 0) {
+					$totaloverriddenweight = 0;
+            		foreach ($checkids as $id) {
+						$totaloverriddenweight += $grades[$id]->weight;
+					}
+					$normalizer = 100 /  $totaloverriddenweight;
+					foreach ($checkids as $id) {
+						$grades[$id]->weight *= $normalizer;
+					}
+            	} else {
+	                $normalizer = 1;
+            	}
             } else {
                 // figure out how much to adjust weights so they are all proporitional to 100
                 $normalizer = (100 - $override_weight) / $contribution;

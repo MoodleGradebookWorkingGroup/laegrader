@@ -1586,7 +1586,7 @@ class grade_report_laegrader extends grade_report_grader {
 				unset($parent->pctg);
 				unset($parent->cat_max);
 				unset($parent->cat_item);
-				$parent->excredit = 0;
+				$parent->extracredit = 0;
 			} // end hack
 
 			// email

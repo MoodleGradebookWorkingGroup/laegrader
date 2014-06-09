@@ -599,7 +599,7 @@ class grade_report_laegrader extends grade_report_grader {
         /**** ACCURATE TOTALS CALCULATIONS  must be done before ranges *****/
         if ($accuratetotals) {
         	foreach ($this->users as $userid => $user) {
-            	$this->gtree->accuratepointsprelimcalculation($this->grades[$userid]);
+//            	$this->gtree->accuratepointsprelimcalculation($this->grades[$userid]);
 	        }
         }
 		/***** ACCURATE TOTALS END *****/

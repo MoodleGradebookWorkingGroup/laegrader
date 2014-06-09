@@ -62,6 +62,7 @@ class grade_tree_local extends grade_tree {
         $this->courseid   = $courseid;
         $this->levels     = array();
         $this->context    = context_course::instance($courseid);
+        $this->showtotalsifcontainhidden = array($this->courseid => grade_get_setting($this->courseid, 'report_user_showtotalsifcontainhidden', $CFG->grade_report_user_showtotalsifcontainhidden));
 
         if (!empty($COURSE->id) && $COURSE->id == $this->courseid) {
             $course = $COURSE;
@@ -764,8 +765,9 @@ class grade_tree_local extends grade_tree {
                 	continue; // already dealt with
                 } else if (array_key_exists($id, $this->emptycats)) {
                 	continue; // already dealt with
-                } else if ($this->items[$id]->extracredit == 1 && !$fullweight) { // extra credit is removed from the calculation making up the container's weight
-                    $extracredit += $grades[$id]->grade_item->grademax;
+//                } else if ($this->items[$id]->extracredit == 1 && !$fullweight) { // extra credit is removed from the calculation making up the container's weight
+                } else if ($this->items[$id]->extracredit == 1) { // extra credit is removed from the calculation making up the container's weight
+                    $grades[$elementid]->extracredit[$id] = $grades[$id]->finalgrade / $grades[$id]->grade_item->grademax; // need to supply the container with the percentage for the item
                 } else if ($fullweight) { // meaning we're coming from cats and items
                     $contribution += $grades[$id]->grade_item->grademax;
                 } else if (!isset($grades[$id]->finalgrade)) {
